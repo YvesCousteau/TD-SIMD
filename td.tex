@@ -1,0 +1,186 @@
+% Created 2020-12-11 Fri 21:44
+% Intended LaTeX compiler: pdflatex
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\date{\today}
+\title{TD SIMD}
+\hypersetup{
+ pdfauthor={},
+ pdftitle={TD SIMD},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 27.1 (Org mode 9.3)}, 
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\uline{Directives}:
+
+\begin{itemize}
+\item Ce TD sera a rendre pour au plus tard Jeudi 17/12/2020 a 00:00 (minuit) aux adresses suivantes (selon qui est en charge de votre groupe): 
+
+\begin{itemize}
+\item \emph{mohammed-salah.ibnamar@uvsq.fr}
+\item \emph{kevin.camus@uvsq.fr}
+\end{itemize}
+
+\item Il faudra utiliser comme sujet du courriel le format suivant (a respecter a la lettre): \textbf{\texttt{[ AoB TD\_simd - NOM PRENOM ]}}
+\end{itemize}
+
+\uline{Notes}:
+
+\begin{itemize}
+\item Vous pouvez effectuer votre exploration sur une VM car l'execution du code n'est pas importante.
+\end{itemize}
+
+\section{Introduction}
+\label{sec:orga7d5a6a}
+
+L'objectif de ce TD est d'explorer le jeu d'instructions SIMD present 
+sur les processeurs x86 (Intel et AMD) dont vous disposez.
+
+L'architecture x86 propose des instructions vectorielles/SIMD sous la forme d'extensions:
+
+\begin{itemize}
+\item \uline{\textbf{SSE}}: \textbf{Streaming SIMD Extensions} qui opere sur des vecteurs nommes \textbf{xmm?} (les registres disponibles vont \textbf{xmm0} a \textbf{xmm7}) qui ont une taille de \textbf{128bits} (16 octets)
+\item \uline{\textbf{AVX}}: \textbf{Advanced Vector eXtensions} qui opere sur des vecteurs \textbf{ymm?} (\textbf{ymm0} a \textbf{ymm15}) qui ont une taille de \textbf{256bits} (32 octets) (SandyBridge)
+\item \uline{\textbf{AVX2}}: \textbf{Advanced Vector eXtensions} qui opere sur des vecteurs \textbf{ymm?} (\textbf{ymm0} a \textbf{ymm15}) qui ont une taille de \textbf{256bits} (32 octets) ()
+\item \uline{\textbf{AVX512}}: Similaire a AVX mais avec des registres \textbf{zmm?} (\textbf{zmm0} a \textbf{zmm31}) qui ont une taille de \textbf{512bits} (64 octets) - ce jeu d'instruction n'est disponible que sur les versions serveur d'Intel
+\end{itemize}
+
+\section{Travail a effectuer}
+\label{sec:org2b20f88}
+\subsection{Code}
+\label{sec:orgedcb4b7}
+
+Vous devez implementer plusieurs versions du code \textbf{dotprod} ci-dessous en deroulant autant de fois 
+que vous desirez le corps de la boucle interne et comparer les codes assembleurs produits par le compilateur 
+pour les differentes versions avec differentes options de compilation destinees a \textbf{produire du code assembleur vectoriel}.
+
+\uline{Exemple du code non deroule}:
+
+\begin{verbatim}
+
+double dotprod(double *restrict a, double *restrict b, unsigned long long n)
+{
+    double d = 0.0;
+
+    for (unsigned long long i = 0; i < n; i++)
+       d += a[i] * b[i];
+
+    return d;
+}
+
+\end{verbatim}
+
+\uline{Exemple du code deroule 2 fois}:
+
+\begin{verbatim}
+
+double dotprod_unroll2(double *restrict a, double *restrict b, unsigned long long n)
+{
+    double d1 = 0.0;
+    double d2 = 0.0;
+
+    for (unsigned long long i = 0; i < n; i += 2)
+       {
+	  d1 += (a[i]     * b[i]);
+	  d2 += (a[i + 1] * b[i + 1]);
+       }
+
+    return (d1 + d2);
+}
+
+\end{verbatim}
+
+\subsection{Options de compilation}
+\label{sec:org453610e}
+
+\uline{Vous pouvez utiliser un ou plusieurs compilateurs, par exemple}: 
+
+\begin{itemize}
+\item GNU C Compiler \textbf{gcc}
+\item Intel C Compiler \textbf{icc}
+\item LLVM \textbf{clang}
+\item AMD Optimizing C Compiler \textbf{aocc}.
+\end{itemize}
+
+\uline{Il faudra compiler le programme en suivant les etapes suivantes (pour \textbf{gcc} et \textbf{clang})}:
+
+\begin{itemize}
+\item \uline{Version de base}: -O1
+\item \uline{Version legerement optimisee}: -O2
+\item \uline{Version fortement optimisee 1}: -O3
+\item \uline{Version fortement optimisee 2}: -Ofast
+\item \uline{Version kamikaze}: -march=native -mtune=native -Ofast -funroll-loops -finline-functions -ftree-vectorize
+\end{itemize}
+
+Vous pouvez utiliser d'autres options de compilation: \textbf{RTFM}.
+
+Pour generer du code assembleur utilisez l'option: \textbf{-S} avec tous les compilateurs
+
+\section{Rendu}
+\label{sec:orgc8d855a}
+
+Vous devez fournir une archive contenant les codes sources et les codes assembleurs analyses en plus d'un \textbf{README} qui fournit
+des explications pour chacune des versions de la fonction et si les instructions SIMD x86 (jeux d'instructions SSE et AVX) ont ete 
+utilisees de facon scalaire (i.e. add[sd] ou add[ss]) ou vectorielle (i.e. add[pd] ou add[ps]).
+
+\begin{itemize}
+\item\relax [ss | sd]: \textbf{ss} pour \textbf{scalar} \textbf{simple} precision et \textbf{sd} pour \textbf{scalar} \textbf{double} precision (operations scalaires)
+\item\relax [ps | pd]: \textbf{ps} pour \textbf{packed} \textbf{simple} precision et \textbf{pd} pour \textbf{packed} \textbf{double} precision (operations vectorielles)
+\end{itemize}
+
+Il est preferable de creer un \textbf{makefile} avec une regle par version (voir l'exemple fournit).
+
+Il faudra aussi fournir un fichier contenant la version du compilateur utilise:
+
+\begin{verbatim}
+
+#Pour GCC
+$ gcc --version > gcc_ver.txt
+
+#Pour clang
+$ clang --version > clang_ver.txt
+
+\end{verbatim}
+
+Et un fichier contenant les informations sur votre processeur:
+
+\begin{verbatim}
+
+$ cat /proc/cpuinfo > cpuinfo.txt
+
+\end{verbatim}
+
+Si vous decidez de faire tout le TD sur Compiler Explorer [1], vous n'avez pas besoin de fournir de \textbf{makefile}. Mais il faudra fournir les versions
+des compilateurs utilises et les micro-architectures cibles [4] (-march=ARCH) et utiliser au minimum les trois compilateurs suivants: gcc, clang et icc.
+
+\section{References:}
+\label{sec:org2b954bc}
+
+\begin{itemize}
+\item 0. \uline{RTFM} (Read The Fucking Manual): \textbf{man gcc} ou \textbf{man clang} sur la console.
+
+\item 1. \uline{Compiler explorer}: \url{https://gcc.godbolt.org/}
+\item 2. \uline{Intel Intrinsics Guide:} \url{https://software.intel.com/sites/landingpage/IntrinsicsGuide/}
+\item 3. \uline{GCC optimization options:} \url{https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html}
+\item 4. \uline{GCC x86 architectures:} \url{https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html}
+\item 5. \uline{Felix Cloutier's x86 instructions reference guide:} \url{https://www.felixcloutier.com/x86/}
+\item 6. \uline{Agner Fog's optimization manuals:} \url{https://www.agner.org/optimize/}
+\end{itemize}
+\end{document}
